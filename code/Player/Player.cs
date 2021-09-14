@@ -26,23 +26,27 @@ partial class SandboxPlayer : Player
 	{
 		MainCamera = new ThirdPersonCamera();
 		LastCamera = MainCamera;
+		katamari = new Prop // probably need to have the prop as a root prop, not parented to anything. Maybe do this by creating the prop and changing its position based of player controls?
+		{
+			Position = 0f
+		};
+		katamari.SetModel( "models/katamari/katamari.vmdl" );
+		//katamari.SetModel( "models/citizen_props/balloonears01.vmdl" ); // balloon is easier to check if rotation is correct
+		//katamari.SetParent( this, false );
+		katamari.EnableSolidCollisions = true;
+		katamari.PhysicsEnabled = true;
+		//katamari.RenderAlpha = 0;
+		katamari.Tags.Add( "dontkatamari" );
 
 		base.Spawn();
 	}
 
 	public override void Respawn()
 	{
-		//SetModel( "models/ball/ball.vmdl" );
-		//RenderAlpha = 0;
+		SetModel( "models/katamari/katamari.vmdl" );
+		RenderAlpha = 0;
 
-		katamari = new Prop // probably need to have the prop as a root prop, not parented to anything. Maybe do this by creating the prop and changing its position based of player controls?
-		{
-			Position = 0
-		};
-		katamari.SetModel( "models/ball/ball.vmdl" );
-		//katamari.SetModel( "models/citizen_props/balloonears01.vmdl" ); // balloon is easier to check if rotation is correct
-		katamari.SetParent( this, true );
-		katamari.EnableSolidCollisions = true;
+		Inventory.Add( new PhysGun(), true );
 
 		Controller = new WalkController();
 		Animator = new StandardPlayerAnimator();
@@ -50,19 +54,15 @@ partial class SandboxPlayer : Player
 		MainCamera = LastCamera;
 		Camera = MainCamera;
 
+		Tags.Add( "dontkatamari" );
 		EnableAllCollisions = true;
+		EnableSolidCollisions = true;
+		PhysicsEnabled = true;
 		EnableDrawing = true;
 		EnableHideInFirstPerson = true;
 		EnableShadowInFirstPerson = true;
 
 		base.Respawn();
-	}
-
-	public bool TouchGround()
-	{
-		var p = Position;
-		var vd = Vector3.Down;
-		return Trace.Ray( p, p + vd * 20 ).Radius( 1 ).Ignore( this ).Run().Hit;
 	}
 
 	public override PawnController GetActiveController()
@@ -87,14 +87,15 @@ partial class SandboxPlayer : Player
 		return MainCamera;
 	}
 
-	protected override void OnPhysicsCollision( CollisionEventData eventData )
-	{
-		// idk, try to get the entity and weld it to the katamari?
-	}
-
 	public override void Simulate( Client cl )
 	{
 		base.Simulate( cl );
+
+		if ( katamari != null )
+		{
+			katamari.Position = new Vector3( this.Position.x, this.Position.y, katamari.Position.z );
+			//katamari.Position = new Vector3( this.Position.x, this.Position.y, this.Position.z );
+		}
 
 		if ( Input.ActiveChild != null )
 		{
@@ -102,7 +103,7 @@ partial class SandboxPlayer : Player
 		}
 
 		if ( LifeState != LifeState.Alive )
-			return;
+			LifeState = LifeState.Alive;
 
 		if ( VehicleController != null && DevController is NoclipController )
 		{
@@ -110,10 +111,10 @@ partial class SandboxPlayer : Player
 		}
 
 		var controller = GetActiveController();
-		if ( controller != null )
-			EnableSolidCollisions = !controller.HasTag( "noclip" );
+		//if ( controller != null )
+		//	EnableSolidCollisions = !controller.HasTag( "noclip" );
 
-		TickPlayerUse();
+		//TickPlayerUse();
 		SimulateActiveChild( cl, ActiveChild );
 
 		Camera = GetActiveCamera();
@@ -131,8 +132,11 @@ partial class SandboxPlayer : Player
 		if ( Input.Left != 0 || Input.Forward != 0 )
 		{
 			timeSinceJumpReleased = 1;
-			this.Rotation = Rotation.From( new Angles( rotateForward, 0, rotateLeft ) );
-			//this.LocalRotation = Rotation.From( new Angles( rotateForward, 0, rotateLeft ) );
+			if ( katamari != null )
+			{
+				//katamari.Rotation = Rotation.From( new Angles( rotateForward, 0, rotateLeft ) );
+				//this.Rotation = Rotation.From( new Angles( rotateForward, 0, rotateLeft ) );
+			}
 		}
 
 		if ( Input.Left == 1 )
@@ -155,28 +159,42 @@ partial class SandboxPlayer : Player
 
 	public override void StartTouch( Entity other )
 	{
-		createPropfromEntity( other );
-		other.Delete();
-		base.StartTouch( other );
+		if ( !other.Tags.Has( "dontkatamari" ) && other != null && katamari != null )
+		{
+			createPropfromEntity( other );
+			other.Delete();
+			base.StartTouch( other );
+		}
 	}
 
 	public void createPropfromEntity( Entity ent )
 	{
+		Prop modelRead = ent as Prop;
+
 		var position = ent.Position;
 		var rotation = ent.Rotation;
 		var scale = ent.Scale;
-		var model = "models/ball/ball.vmdl";
+		var model = "";
+		var color = new Color();
+		if ( modelRead != null )
+		{
+			model = modelRead.GetModelName();
+			color = modelRead.RenderColor;
+		}
 
 		var entProp = new Prop
 		{
 			Position = position,
 			Rotation = rotation,
 			Scale = scale,
+			RenderColor = color,
 			//Parent = this
 		};
 		entProp.SetModel( model );
 
-		var thisBody = katamari.PhysicsBody;
+		entProp.Tags.Add( "dontkatamari" );
+
+		var thisBody = this.PhysicsBody;
 		var otherBody = entProp.PhysicsBody;
 
 		// We want traces to now think the other body is now this body
@@ -195,7 +213,7 @@ partial class SandboxPlayer : Player
 		}
 
 		// Visually parent other prop to this prop
-		entProp.Parent = katamari;
+		entProp.Parent = this;
 		//entProp.weldParent = this;
 
 		thisBody.RebuildMass();

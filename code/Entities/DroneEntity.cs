@@ -34,6 +34,7 @@ public partial class DroneEntity : Prop
 		base.Spawn();
 
 		SetModel( "entities/drone/drone.vmdl" );
+		this.Tags.Add( "dontkatamari" );
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, false );
 	}
 

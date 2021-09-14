@@ -80,6 +80,7 @@ public partial class CarEntity : Prop, IUse
 		var modelName = "models/car/car.vmdl";
 
 		SetModel( modelName );
+		this.Tags.Add( "dontkatamari" );
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, false );
 		SetInteractsExclude( CollisionLayer.Player );
 		EnableSelfCollisions = false;

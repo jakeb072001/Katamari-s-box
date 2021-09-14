@@ -6,6 +6,7 @@ partial class SandboxGame : Game
 	public static string UserPropCurrent;
 	public SandboxGame()
 	{
+		this.Tags.Add( "dontkatamari" );
 		if ( IsServer )
 		{
 			// Create the HUD

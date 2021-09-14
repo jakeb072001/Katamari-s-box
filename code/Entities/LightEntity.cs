@@ -8,6 +8,7 @@ public partial class LightEntity : PointLightEntity, IUse
 		base.Spawn();
 
 		SetModel( "models/light/light_tubular.vmdl" );
+		this.Tags.Add( "dontkatamari" );
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, false );
 	}
 

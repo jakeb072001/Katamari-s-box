@@ -8,6 +8,7 @@ public partial class LampEntity : SpotLightEntity, IUse
 		base.Spawn();
 
 		SetModel( "models/torch/torch.vmdl" );
+		this.Tags.Add( "dontkatamari" );
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, false );
 	}
 
