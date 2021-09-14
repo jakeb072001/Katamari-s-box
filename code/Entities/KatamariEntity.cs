@@ -67,7 +67,7 @@ public partial class KatamariEntity : Prop
 		if ( thisBody == null )
 			return;
 
-		physicsScale += 3f;
+		physicsScale += 1.5f;
 
 		var test = otherBody.AddCapsuleShape( otherCollisionBounds.Mins / 2f, otherCollisionBounds.Maxs / 2f, entProp.Scale / 2f, true );
 		test.DisableTraceQuery();

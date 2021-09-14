@@ -44,7 +44,7 @@ partial class SandboxPlayer : Player
 	public override void Respawn()
 	{
 		SetModel( "models/katamari/katamari.vmdl" );
-		RenderAlpha = 0;
+		//RenderColor = new Color( 0 );
 
 		Inventory.Add( new PhysGun(), true );
 
